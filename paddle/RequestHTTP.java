@@ -5,7 +5,7 @@ import java.io.*;
 import java.net.*;
 
 
-public class Request {
+public class RequestHTTP {
 
 	// Connection
 	Socket socket;
@@ -23,7 +23,7 @@ public class Request {
 	String path = "";
 
 
-	public Request ( Socket s, int id ) {
+	public RequestHTTP ( Socket s, int id ) {
 
 		socket = s;
 		sessionId = id;

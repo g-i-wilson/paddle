@@ -4,7 +4,7 @@ import java.util.*;
 import java.io.*;
 import java.net.*;
 
-public class Response {
+public class ResponseHTTP {
 
 	int sessionId;
 	Socket socket;
@@ -13,7 +13,7 @@ public class Response {
 	LinkedHashMap<String,String> header = new LinkedHashMap<>();
 
 	// init
-	public Response ( Socket s, int id ) {
+	public ResponseHTTP ( Socket s, int id ) {
 		sessionId = id;
 		socket = s;
 	}

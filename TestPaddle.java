@@ -5,9 +5,9 @@ public class TestPaddle {
 
     CountRequests c = new CountRequests();
 
-    Server p1 = new Server( c, Integer.valueOf(args[0]) );
-    Server p2 = new Server( c, Integer.valueOf(args[1]) );
-    Server p3 = new Server( c, Integer.valueOf(args[2]) );
+    ServerHTTP p1 = new ServerHTTP( c, Integer.valueOf(args[0]) );
+    ServerHTTP p2 = new ServerHTTP( c, Integer.valueOf(args[1]) );
+    ServerHTTP p3 = new ServerHTTP( c, Integer.valueOf(args[2]) );
 
 
     while(true) {
@@ -28,7 +28,7 @@ class CountRequests extends ServerState {
     System.out.println( "CountRequests initialized!");
   }
 
-  public void createResponse ( Request req, Response res ) {
+  public void respondHTTP ( RequestHTTP req, ResponseHTTP res ) {
     count++;
     res.setBody( "<h1>Count: "+count+"</h1>" );
   }

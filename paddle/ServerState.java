@@ -8,9 +8,9 @@ package paddle;
 
 public class ServerState {
 
-  public void createResponse (Request req, Response res) {
+  public void respondHTTP (RequestHTTP req, ResponseHTTP res) {
     System.out.println( req );
-    res.setBody( "<h1>It works!<h1>" );
+    res.setBody( "<h1>HTTP works!<h1>" );
   }
 
 }
