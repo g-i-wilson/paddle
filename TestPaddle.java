@@ -1,4 +1,4 @@
-package paddle;
+import paddle.*;
 
 public class TestPaddle {
   public static void main(String[] args) throws Exception {
