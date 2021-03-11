@@ -15,7 +15,8 @@ public class ServePulses {
     Server displayLast		 	= new ServerHTTP( c, 9001, "display last pulse" );
     Server display100 			= new ServerHTTP( c, 9002, "display last 100 pulses" );
 
-    Server pulsePost 				= new ServerHTTP( c, 49155, "pulse data POST" );
+    Server pulsePost 				= new ServerHTTP( c, 49155, "pulse data POST (byte[])" );
+    Server pulsePostTest		= new ServerHTTP( c, 49154, "pulse data POST (hex String)" );
 
 		
 
@@ -132,8 +133,14 @@ class PulseServerState extends ServerState {
 			
 		String body = "";
 
-  	if ( req.socket().getLocalPort() == 49155 ) {
+  	if ( req.socket().getLocalPort() == 49154 ) {
   		PulseData pd = new PulseData( req.data() );
+  		addDataList( pd.samples() );
+  		res.setMIME( "text/plain" );
+  		res.setBody( "Converted string from hex to bytes:\n"+req.data()+"\n"+pd );
+  		
+  	} else if ( req.socket().getLocalPort() == 49155 ) {
+  		PulseData pd = new PulseData( req.data().getBytes() );
   		addDataList( pd.samples() );
   		res.setMIME( "text/plain" );
   		res.setBody( "Thanks Storm!\n\n"+pd );
