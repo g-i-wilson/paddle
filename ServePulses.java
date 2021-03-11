@@ -9,7 +9,7 @@ import paddle.*;
 public class ServePulses {
   public static void main(String[] args) throws Exception {
 
-    PulseData c = new PulseData();
+    PulseServerState c = new PulseServerState();
 
     Server testPost 				= new ServerHTTP( c, 9000, "test POST" );
     Server displayLast		 	= new ServerHTTP( c, 9001, "display last pulse" );
@@ -30,13 +30,13 @@ public class ServePulses {
 }
 
 
-class PulseData extends ServerState {
+class PulseServerState extends ServerState {
 
   private List<List<Integer>> pulses;
   private List<String> pulseTimes;
   private File dataFile;
   
-  public PulseData () throws Exception {
+  public PulseServerState () throws Exception {
   	this(
 			LocalDateTime.now().format(
 		  	DateTimeFormatter.ofPattern("dd-MM-yyyy_HHmmss")
@@ -44,15 +44,15 @@ class PulseData extends ServerState {
     );
   }
 
-  public PulseData ( String fileName ) throws Exception {
+  public PulseServerState ( String fileName ) throws Exception {
   	dataFile = new File( fileName );
   	pulses = new ArrayList<>();
   	pulseTimes = new ArrayList<>();
   	Files.write(dataFile.toPath(), "".getBytes());
-    System.out.println( "PulseData initialized!" );
+    System.out.println( "PulseServerState initialized!" );
   }
   
-  public void addData ( String data ) {
+  public void addDataCSV ( String data ) {
   	System.out.println( data );
   	String dataPoints[];
   	//if (data.equals("") || data.equals("data=")) return;
@@ -73,7 +73,11 @@ class PulseData extends ServerState {
 			System.out.println( "ERROR: couldn't write to "+dataFile );
 			e.printStackTrace();
 		}
-  	pulses.add( subList );
+  	addDataList( subList );
+  }
+  
+  public void addDataList( List<Integer> dataList ) {
+  	pulses.add( dataList );
   	if (pulses.size() > 100) pulses.remove(0);
   	pulseTimes.add( LocalDateTime.now().toString() );
   	if (pulseTimes.size() > 100) pulseTimes.remove(0);
@@ -128,9 +132,14 @@ class PulseData extends ServerState {
 			
 		String body = "";
 
-  	if ( req.socket().getLocalPort() == 9000 ) {
-  		//System.out.println( req.data() );
-  		addData( req.data() );
+  	if ( req.socket().getLocalPort() == 49155 ) {
+  		PulseData pd = new PulseData( req.data() );
+  		addDataList( pd.samples() );
+  		res.setMIME( "text/plain" );
+  		res.setBody( "Thanks Storm!\n\n"+pd );
+  		
+  	} else if ( req.socket().getLocalPort() == 9000 ) {
+  		addDataCSV( req.data() );
   		res.setBody(
   			"<form method='post'><br><br>\n" +
   			"<input type='text' name='data'><br>\n" +
