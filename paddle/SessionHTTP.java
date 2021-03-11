@@ -22,7 +22,7 @@ public class SessionHTTP extends Thread {
 		try {
 
 			// Log session start
-			System.out.println("\n\n====\n["+sessionId+"] paddle Session: new thread started...");
+			System.out.println("\n\n====\n["+sessionId+"] paddle.SessionHTTP: new thread started...");
 
 			RequestHTTP req;
 			ResponseHTTP res;
@@ -34,7 +34,7 @@ public class SessionHTTP extends Thread {
 				stateObject.respondHTTP( req, res );
 				res.transmit();
 			} catch (Exception e) {
-				System.out.println("["+sessionId+"] paddle Session ERROR: Exception while processing client.");
+				System.out.println("["+sessionId+"] paddle.SessionHTTP ERROR: Exception while processing client.");
 				System.out.println(e);
 				e.printStackTrace();
 			}
@@ -43,10 +43,10 @@ public class SessionHTTP extends Thread {
 			socketObject.close();
 
 			// Log session end
-			System.out.println("["+sessionId+"] paddle Client: socket closed.\n====\n\n");
+			System.out.println("["+sessionId+"] paddle.SessionHTTP: socket closed.\n====\n\n");
 
 		} catch (Exception e) {
-			System.out.println("["+sessionId+"] paddle Client ERROR: Exception in thread.");
+			System.out.println("["+sessionId+"] paddle.SessionHTTP ERROR: Exception in thread.");
 			System.out.println(e);
 			e.printStackTrace();
 		}

@@ -11,13 +11,17 @@ public class ServePulses {
 
     PulseData c = new PulseData();
 
-    ServerHTTP receive 					= new ServerHTTP( c, 9000 );
-    ServerHTTP displayBar		 		= new ServerHTTP( c, 9001 );
-    ServerHTTP displaySurface 	= new ServerHTTP( c, 9002 );
+    Server testPost 				= new ServerHTTP( c, 9000, "test POST" );
+    Server displayLast		 	= new ServerHTTP( c, 9001, "display last pulse" );
+    Server display100 			= new ServerHTTP( c, 9002, "display last 100 pulses" );
 
+    Server pulsePost 				= new ServerHTTP( c, 49155, "pulse data POST" );
+
+		
 
     while(true) {
       Thread.sleep(1000);
+
     }
 
 
@@ -29,6 +33,7 @@ public class ServePulses {
 class PulseData extends ServerState {
 
   private List<List<Integer>> pulses;
+  private List<String> pulseTimes;
   private File dataFile;
   
   public PulseData () throws Exception {
@@ -42,14 +47,20 @@ class PulseData extends ServerState {
   public PulseData ( String fileName ) throws Exception {
   	dataFile = new File( fileName );
   	pulses = new ArrayList<>();
+  	pulseTimes = new ArrayList<>();
   	Files.write(dataFile.toPath(), "".getBytes());
     System.out.println( "PulseData initialized!" );
   }
   
   public void addData ( String data ) {
   	System.out.println( data );
-  	if (data.equals("")) return;
-  	String[] dataPoints = data.split(",");
+  	String dataPoints[];
+  	//if (data.equals("") || data.equals("data=")) return;
+  	try {
+  		dataPoints = data.split("=")[1].split("%2C");
+  	} catch (Exception e) {
+  		return;
+  	}
   	List<Integer> subList = new ArrayList<>();
 		for (String point : dataPoints) {
 			System.out.println( "> "+point );
@@ -62,10 +73,22 @@ class PulseData extends ServerState {
 			System.out.println( "ERROR: couldn't write to "+dataFile );
 			e.printStackTrace();
 		}
-  	pulses.add( 0, subList ); // add at beginning
+  	pulses.add( subList );
+  	if (pulses.size() > 100) pulses.remove(0);
+  	pulseTimes.add( LocalDateTime.now().toString() );
+  	if (pulseTimes.size() > 100) pulseTimes.remove(0);
+  }
+  
+  private String arrayIntegerJoin (List<Integer> l) {
+  	String str = "";
+  	for (Integer i : l) str += ","+i;
+  	return str.substring(1);
   }
 
   public void respondHTTP ( RequestHTTP req, ResponseHTTP res ) {
+  	System.out.println( req.path() );
+  	String latestPulse = pulses.size() > 0 ? arrayIntegerJoin(pulses.get(pulses.size()-1)) : "";
+  	String latestPulseTime = pulseTimes.size() > 0 ? pulseTimes.get(pulses.size()-1) : "";
   	String plotlyStart =
   		"<!DOCTYPE html>\n" +
 			"<head>\n" +
@@ -78,7 +101,8 @@ class PulseData extends ServerState {
 //			"</style>\n" +
 			"</head>\n" +
 			"<body style='background-color:#eeeeee'>\n" +
-			"<div id='plot_div'></div>\n" +
+			"Latest pulse at: "+latestPulseTime+" <button onClick=\"window.open(encodeURI('data:text/csv;charset=utf-8,"+latestPulse+"'))\">Download CSV</button><br>\n" +
+			"<br><div id='plot_div'></div>\n" +
 			"<script src='https://cdn.plot.ly/plotly-latest.min.js'></script>\n" +
 			"<script>\n" +
 			"var layout = {\n" +
@@ -107,26 +131,33 @@ class PulseData extends ServerState {
   	if ( req.socket().getLocalPort() == 9000 ) {
   		//System.out.println( req.data() );
   		addData( req.data() );
-  		res.setBody( "<h1>Thanks!</h1><br><br>"+pulses );
+  		res.setBody(
+  			"<form method='post'><br><br>\n" +
+  			"<input type='text' name='data'><br>\n" +
+  			"<input type='submit' value='Submit'>\n" +
+  			"</form><br><br>\n" +
+  			pulses
+  		);
   		
-  	} else if ( req.socket().getLocalPort() == 9001 ) {
-  		System.out.println("9001");
+  	//} else if ( req.socket().getLocalPort() == 9001 ) {
+  	} else if ( req.path().toLowerCase().equals("/latest") ) {
+  		//System.out.println("9001");
 			body +=
 				plotlyStart +
 				"Plotly.newPlot( 'plot_div', [ \n";
-  		if (pulses.size() > 0) {
-				for (List<Integer> pulse : pulses) {
-					body += "{type:'bar', marker:{opacity:'0.2', color:'#0000ff'}, y:"+pulse+"},\n";
-				}
-			}
+  		//if (pulses.size() > 0) {
+  			// only display latest pulse
+				body += "{type:'scatter', marker:{opacity:'0.2', color:'#0000ff'}, y:["+latestPulse+"]},\n";
+			//}
 			body +=
 				//" ], {\"barmode\":\"overlay\"} );\n" +
 				" ], layout );\n" +
 				plotlyEnd;
   		res.setBody( body );
 			
-  	} else if ( req.socket().getLocalPort() == 9002 ) {
-  		System.out.println("9002");
+  	//} else if ( req.socket().getLocalPort() == 9002 ) {
+  	} else if ( req.path().toLowerCase().equals("/last100") ) {
+  		//System.out.println("9002");
 			body +=
 				plotlyStart +
 				"Plotly.newPlot( 'plot_div', [ \n";

@@ -1,89 +1,122 @@
 package paddle;
 
-import java.util.*;
-import java.io.*;
-import java.net.*;
-
-
 public abstract class Server extends Thread {
 
 	// General
 	private ServerState 		state;
 	private int 						port;
 	private String 					name;
-	private String 					socType;
-	
-	// TCP
-	private ServerSocket 		tcpSocket;
-	private int 						sessionId;
-	
-	// UDP
-	private DatagramSocket 	udpSocket;
-	private long 						packetId;
-	private byte[] 					udpBuffer;
+	private boolean					starting;
+	private boolean					running;
+	private boolean					willPause;
+	private boolean					paused;
 	
 	
-	public Server ( ServerState state, int port, String name ) throws Exception {
-		this( state, port, name, "tcp" );
-	}
-
-	public Server ( ServerState state, int port, String name, String socType ) throws Exception {
-		this( state, port, name, socType, 1500 );
-	}
-
-	public Server ( ServerState state, int port, String name, String socType, int udpBufSize ) throws Exception {
+	public Server ( ServerState state, int port, String name ) {
+		running				= true;
+		starting			= true;
+		paused				= false;
 		this.state 		= state;
 		this.port 		= port;
 		this.name 		= name;
-		this.socType 	= socType.toLowerCase();
-		if (socType.equals("tcp")) {
-			tcpSocket 	= new ServerSocket(port);
-			sessionId 	= 0;
-		} else if (socType.equals("udp")) {
-			udpSocket 	= new DatagramSocket(port);
-			udpBuffer 	= new byte[udpBufSize];
-			packetId		= 0;
-		} else {
-			throw Exception("Server "+name+" error: unrecognized socket type: "+socType);
-		}
 		start();
 	}
-
-
-	public void tcpAction( Socket socket, ServerState state, int sessionId, String name );
 	
-	public void udpAction( DatagramPacket packet, ServerState state, long packetId, String name );
+	public ServerState state () {
+		return state;
+	}
+	
+	public int port () {
+		return port;
+	}
+	
+	public String name () {
+		return name;
+	}
 
+	public boolean starting () {
+		return starting;
+	}
+	
+	/////////////// ABSTRACT METHOD ///////////////
+	public abstract void init() throws Exception;
+
+	public boolean running () {
+		return running;
+	}
+	
+	/////////////// ABSTRACT METHOD ///////////////
+	public abstract void loop () throws Exception;
+	
+	public void pause () {
+		willPause = true;
+	}
+	
+	public void unpause () {
+		paused = false;
+	}
+	
+	public boolean paused () {
+		return paused;
+	}
+	
+	public void end () {
+		running = false;
+	}
+	
+	public String toString () {
+		return
+			"Server:    "+name+"\n" +
+			"port:      "+port+"\n" +
+			"running:   "+running+"\n" +
+			"starting:  "+starting+"\n" +
+			"paused:    "+paused+"\n"
+		;
+	}
 
 	public void run () {
 
-		System.out.println( "**********************" );
-		System.out.println( "Server started! );
-		System.out.println( "port: "+port );
-		System.out.println( "name: "+name );
-		System.out.println( "type: "+socType );
-		System.out.println( "**********************" );
+		try {
+			init();
+		} catch (Exception e) {
+			System.out.println("Exception caught during init() in paddle.Server '"+name+"':");
+			System.out.println(e);
+			e.printStackTrace();
+		}
+		starting = false;
+		System.out.println( "paddle.Server '"+name+"' is running on port "+port+"..." );
 
-		while (true) {
+		while (running) {
 			try {
-				if (socType.equals("tcp")) {
-					Socket socket = tcpSocket.accept();  // Wait for a client to connect
-					sessionId++;
-					tcpAction(socket, state, sessionId);
-				} else if (socType.equals("udp")) {
-					DatagramPacket packet = new DatagramPacket(udpBuffer, udpBuffer.length);
-					udpSocket.receive(packet);
-					packetId++;
-					udpAction(packet, state, sessionId);
-				}
-				new SessionHTTP(socket, state, sessionId);  // Handle the client in a separate thread
+				loop();
 			}
-				catch (Exception e) {
-				System.out.println("paddle HTTP server ERROR: Exception while creating new SessionHTTP thread.");
+			catch (Exception e) {
+				System.out.println("Exception caught during loop() in paddle.Server '"+name+"':");
 				System.out.println(e);
 				e.printStackTrace();
 			}
+		
+			if (willPause) {
+				paused = true;
+				willPause = false;
+			}
+			while (paused) {
+				try {
+					Thread.sleep(1);
+				} catch (Exception e) {
+					System.out.println("Exception caught during sleep after pausing paddle.Server '"+name+"':");
+					System.out.println(e);
+					e.printStackTrace();
+				}
+				if (!running) {
+					paused = false;
+					break;
+				}
+			}
+
 		}
+
+		System.out.println( "paddle.Server '"+name+"' on port "+port+" has ended." );
 
 	}
 
