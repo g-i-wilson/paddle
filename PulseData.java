@@ -69,7 +69,7 @@ public class PulseData {
 		return timeReceived;
 	}
 	
-	public byte[] dataa () {
+	public byte[] data () {
 		return data;
 	}
 	
