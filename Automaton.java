@@ -1,37 +1,27 @@
 package paddle;
 
-public abstract class Server extends Thread {
+public abstract class Automaton extends Thread {
 
 	// General
-	private ServerState 		state;
-	private int 						port;
 	private String 					name;
 	private boolean					starting;
 	private boolean					running;
 	private boolean					willPause;
 	private boolean					paused;
+	private int							cycleId;
 	
 	
-	public Server ( ServerState state, int port, String name ) {
+	public Automaton ( String name ) {
+		super( name );
 		running				= true;
 		starting			= true;
 		paused				= false;
-		this.state 		= state;
-		this.port 		= port;
-		this.name 		= name;
+		cycleId				= 0;
 		start();
 	}
 	
-	public ServerState state () {
-		return state;
-	}
-	
-	public int port () {
-		return port;
-	}
-	
 	public String name () {
-		return name;
+		return getName;
 	}
 
 	public boolean starting () {
@@ -66,29 +56,33 @@ public abstract class Server extends Thread {
 	
 	public String toString () {
 		return
-			"Server:    "+name+"\n" +
-			"port:      "+port+"\n" +
-			"running:   "+running+"\n" +
-			"starting:  "+starting+"\n" +
-			"paused:    "+paused+"\n"
+			this+": "+name+"\n" +
+			"port: "+port+"\n" +
+			"running: "+running+"\n" +
+			"starting: "+starting+"\n" +
+			"paused: "+paused+"\n"
 		;
 	}
 
 	public void run () {
 
-		try {
-			init();
-		} catch (Exception e) {
-			System.out.println(this+": Exception caught during init() in '"+name+"':");
-			System.out.println(e);
-			e.printStackTrace();
+		while (starting) {
+			try {
+				init();
+				starting = false;
+			} catch (Exception e) {
+				System.out.println(this+": Exception caught during init() in '"+name+"':");
+				System.out.println(e);
+				e.printStackTrace();
+				int delay = (int)(Math.random()*10+1);
+				System.out.println(this+": Will try again in "+delay+"ms...");
+				Thread.sleep(delay); // 1-10 milliseconds
+			}
 		}
-		starting = false;
-		System.out.println( this+": '"+name+"' is serving on port "+port+"..." );
 
 		while (running) {
 			try {
-				loop();
+				loop( cycleId++ );
 			}
 			catch (Exception e) {
 				System.out.println(this+": Exception caught during loop() in '"+name+"':");
@@ -102,7 +96,7 @@ public abstract class Server extends Thread {
 			}
 			while (paused) {
 				try {
-					Thread.sleep(1);
+					Thread.sleep(1); // 1 millisecond
 				} catch (Exception e) {
 					System.out.println(this+": Exception caught during sleep after pausing '"+name+"':");
 					System.out.println(e);
@@ -116,7 +110,7 @@ public abstract class Server extends Thread {
 
 		}
 
-		System.out.println( this+": '"+name+"' on port "+port+" has ended." );
+		System.out.println( this+": Thread ended." );
 
 	}
 
