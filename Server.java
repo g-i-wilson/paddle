@@ -76,21 +76,25 @@ public abstract class Server extends Thread {
 
 	public void run () {
 
-		try {
-			init();
-		} catch (Exception e) {
-			System.out.println(this+": Exception caught during init() in '"+name+"':");
-			System.out.println(e);
-			e.printStackTrace();
+		while (starting) {
+			try {
+				init();
+				starting = false;
+			} catch (Exception e) {
+				System.out.println(this+": Exception caught during init() in '"+name+"':");
+				System.out.println(e);
+				e.printStackTrace();
+				int delay = (int)(Math.random()*10+1);
+				System.out.println(this+": Will try again in "+delay+"ms...");
+				Thread.sleep(delay); // 1-10 milliseconds
+			}
 		}
-		starting = false;
 		System.out.println( this+": '"+name+"' is serving on port "+port+"..." );
 
 		while (running) {
 			try {
 				loop();
-			}
-			catch (Exception e) {
+			} catch (Exception e) {
 				System.out.println(this+": Exception caught during loop() in '"+name+"':");
 				System.out.println(e);
 				e.printStackTrace();
