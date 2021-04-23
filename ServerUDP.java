@@ -1,48 +1,45 @@
 package paddle;
 
-import java.util.*;
-import java.io.*;
-import java.net.*;
+public class ServerUDP extends Server {
 
+	private DatagramSocket	socket;
+	private int							rxId;
+	private int							txId;
+	
 
-public class ServerUDP extends Thread {
-
-	private DatagramSocket serverSocket;
-	private ServerState state;
-	private int port;
-	private byte[] buffer;
-
-	public ServerUDP ( ServerState state, int port, int bufferSize ) throws Exception {
-		this.state = state;
-		this.port = port;
-		buffer = new byte[bufferSize];
-		serverSocket = new DatagramSocket(port);
-		start();
+	public ServerUDP ( ServerState state, int port, String name ) {
+		super( state, port, name );
 	}
-
-
-
-	public void run () {
-
-		System.out.println( "===\npaddle UDP server started on port "+port+"\n===");
-
-		long packetId = 0;
-
-		while (true) {
-			try {
-				DatagramPacket packet = new DatagramPacket( buffer, buffer.length );
-				serverSocket.receive(packet); // wait for a UDP packet
-				packetId++;
-				
-				new ActionUDP(state, sessionId);  // Handle the action in a separate thread
-			}
-				catch (Exception e) {
-				System.out.println("paddle UDP server ERROR: Exception while creating new Session thread.");
-				System.out.println(e);
-				e.printStackTrace();
-			}
+	
+	public ServerUDP ( ServerState state, String name ) {
+		super( state, -1, name );
+	}
+	
+	// Exception is caught by abstract class Server
+	public void init () throws Exception {
+		sessionId = 0;
+		if (port() != -1) {
+			serverSocket = new DatagramSocket( this.port() );
+		} else {
+			serverSocket = new DatagramSocket();
 		}
-
 	}
-
+	
+	// Exception is caught by abstract class Server
+	public void loop () {
+		DatagramPacket packet = socket.receive();
+		new ReceiveUDP(this.state(), packet, rxId++);		
+	}
+	
+	public void send ( String address, int port, byte[] data ) {
+		socket.send(
+			new DatagramPacket(
+				data,
+				data.length,
+				address,
+				port
+			)
+		);
+	}
+	
 }

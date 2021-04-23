@@ -18,11 +18,13 @@ public class ServerHTTP extends Server {
 		return sessionId;
 	}
 
+	// Exception is caught by abstract class Server
 	public void init () throws Exception {
 		sessionId = 0;
 		serverSocket = new ServerSocket( this.port() );
 	}
 	
+	// Exception is caught by abstract class Server
 	public void loop () throws Exception {
 		Socket socket = serverSocket.accept();  // Wait for a client to connect
 		sessionId++;
