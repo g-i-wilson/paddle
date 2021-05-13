@@ -18,7 +18,7 @@ public class RequestHTTP {
 
 	// Query data sent with the request (first line of header or body)
 	String data = "";
-
+	byte[] body_bytes;
 	// Path requested (first line of header)
 	String path = "";
 
@@ -88,7 +88,7 @@ public class RequestHTTP {
 				int content_length = Integer.parseInt( header.read("Content-Length") );
 				System.out.println( "["+sessionId+"] Request: Content-Length="+content_length );
 				// read Content-Length bytes from the socket
-				byte[] body_bytes = new byte[content_length];
+				body_bytes = new byte[content_length];
 				// ...now convert bytes to a String.
 				if (stream.read( body_bytes ) < 1) {
 					// check for zero bytes (0) or end of stream (-1)
@@ -153,6 +153,10 @@ public class RequestHTTP {
 
 	public String data () {
 		return data;
+	}
+
+	public byte[] binary() {
+		return body_bytes;
 	}
 
 	public String path () {
