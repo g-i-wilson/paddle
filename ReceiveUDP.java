@@ -17,7 +17,7 @@ public class ReceiveUDP extends Thread {
 	
 	public void run () {
 		data = new String( packet.getData() );
-		server.state().process( this );
+		server.state().respondUDP( this );
 	}
 	
 	// network info
@@ -35,7 +35,7 @@ public class ReceiveUDP extends Thread {
 	}
 	
 	// connection identity info
-	public int connectionId () {
+	public int packetId () {
 		return packetId;
 	}
 	public Server server () {

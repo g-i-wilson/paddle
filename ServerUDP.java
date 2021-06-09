@@ -4,7 +4,6 @@ public class ServerUDP extends Server {
 
 	private DatagramSocket	socket;
 	private int							rxId;
-	private int							txId;
 	
 
 	public ServerUDP ( ServerState state, int port, String name ) {
@@ -40,6 +39,20 @@ public class ServerUDP extends Server {
 				port
 			)
 		);
+	}
+	
+	// test
+	public static void main (String args) {
+	
+		ServerState state = new ServerState();
+
+		ServerUDP server0 = new ServerUDP( state, 9000, "udpserver0" );
+		ServerUDP server1 = new ServerUDP( state, 9001, "udpserver1" );
+		
+		server0.send( "localhost", 9001, new byte[]{'h','e','l','l','o'} );
+		// Should ping-pong back and forth, each server replying...
+		// ...That's why we need a Thread.sleep(__) delay in the state object!
+		
 	}
 	
 }
