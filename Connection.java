@@ -14,6 +14,10 @@ public interface Connection {
 	public int localPort ();
 	
 	// connection identity info
+	public String protocol ();
+	
+	public boolean inbound ();
+	
 	public Server server ();
 	
 	public int connectionId ();

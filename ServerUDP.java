@@ -36,18 +36,7 @@ public class ServerUDP extends Server {
 	public void loop () throws Exception {
 		DatagramPacket packet = new DatagramPacket(new byte[mtuSize], mtuSize);
 		socket.receive( packet );
-		new ReceiveUDP(this, socket, packet, rxId++);
-	}
-	
-	public void send ( String address, int port, byte[] data ) throws Exception {
-		socket.send(
-			new DatagramPacket(
-				data,
-				data.length,
-				InetAddress.getByName( address ),
-				port
-			)
-		);
+		new InboundUDP(this, socket, packet, rxId++);
 	}
 	
 	// Maximum Tranmission Unit size
@@ -59,18 +48,20 @@ public class ServerUDP extends Server {
 		return mtuSize;
 	}
 	
+	public DatagramSocket socket () {
+		return socket;
+	}
+	
 	// test
-	public static void main (String[] args) {
+	public static void main (String[] args) throws Exception {
 	
 		ServerState state = new ServerState();
 
 		ServerUDP server0 = new ServerUDP( state, 9000, "udpserver0" );
 		ServerUDP server1 = new ServerUDP( state, 9001, "udpserver1" );
 		
-		while( server0.starting() );
-		
 		try {
-			server0.send( "localhost", 9001, new byte[]{'h','e','l','l','o'} );
+			new OutboundUDP( "localhost", 9001, "hello server1", server0 );
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -28,7 +28,17 @@ public class ServerHTTP extends Server {
 	public void loop () throws Exception {
 		Socket socket = serverSocket.accept();  // Wait for a client to connect
 		sessionId++;
-		new SessionHTTP(socket, this.state(), sessionId);  // Handle the client in a separate thread
+		new InboundHTTP(this, socket, sessionId);  // Handle the client in a separate thread
+	}
+	
+	// test
+	public static void main (String[] args) throws Exception {
+	
+		ServerState state = new ServerState();
+
+		ServerHTTP server0 = new ServerHTTP( state, 9000, "httpserver0" );
+		ServerHTTP server1 = new ServerHTTP( state, 9001, "httpserver1" );
+				
 	}
 	
 }

@@ -13,31 +13,38 @@ public class ServerState {
 	public void printConnection ( Connection c ) {
   	System.out.println(
   		this+" ["+count+"]:\n"+
-  		"Type: "+c+"\n"+
-  		"Name: "+c.server().name()+" ("+c.connectionId()+")\n"+
-  		"From: "+c.remoteAddress()+":"+c.remotePort()+"\n"+
-  		"To:   "+c.localAddress()+":"+c.localPort()+"\n"+
-  		"Data: '"+c.data()+"'\n"
+  		"Protocol:      "+c.protocol()+"\n"+
+  		"Direction:     "+(c.inbound() ? "IN" : "OUT")+"\n"+
+  		"Server Name:   "+c.server().name()+"\n"+
+  		"Connection ID: "+c.connectionId()+"\n"+
+  		"Remote Addr:   "+c.remoteAddress()+":"+c.remotePort()+"\n"+
+  		"Local Addr:    "+c.localAddress()+":"+c.localPort()+"\n"+
+  		"Data:          "+(c.data() != null ? new String(c.data()) : "")+"\n"
   	);
 	}
 
-  public void respond ( SessionHTTP session ) {
+  public void respond ( InboundHTTP session ) {
   	count++;
     session.response().setBody(
-    	"<h1>HTTP works!<h1><br>"+
+    	"<h1>HTTP works!</h1><br>"+
     	"path: "+session.request().path()+"<br>"+
     	"body: "+session.request().body()
     );
     printConnection( session );
   }
   
-  public void respond ( ReceiveUDP packet ) {
+  public void respond ( InboundUDP rxPacket ) {
   	count++;
-    printConnection( packet );
+    printConnection( rxPacket );
     try {
   		Thread.sleep(500);
-  	} catch (Exception e) {}
-  	packet.reply( "UDP works! Received data("+packet.connectionId()+"): "+packet.data() );
+  		OutboundUDP txPacket = rxPacket.reply(
+  			"UDP works! Received data ("+rxPacket.connectionId()+"): "+(new String(rxPacket.data()))
+  		);
+  		printConnection( txPacket );
+  	} catch (Exception e) {
+  		e.printStackTrace();
+  	}
   }
   
 }

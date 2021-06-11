@@ -2,7 +2,7 @@ package paddle;
 
 import java.net.*;
 
-public class ReceiveUDP extends Thread implements Connection {
+public class InboundUDP extends Thread implements Connection {
 
 	private ServerUDP server;
 	private DatagramSocket socket;
@@ -13,7 +13,7 @@ public class ReceiveUDP extends Thread implements Connection {
 	private int remotePort;
 	
 
-	public ReceiveUDP ( ServerUDP server, DatagramSocket socket, DatagramPacket packet, int packetId ) {
+	public InboundUDP ( ServerUDP server, DatagramSocket socket, DatagramPacket packet, int packetId ) {
 		this.server = server;
 		this.socket = socket;
 		this.packet = packet;
@@ -25,6 +25,21 @@ public class ReceiveUDP extends Thread implements Connection {
 	public void run () {
 		data = packet.getData();
 		server.state().respond( this );
+	}
+	
+	// specific to InboundUDP
+	public OutboundUDP reply ( String replyText ) throws Exception {
+		return reply ( replyText.getBytes() );
+	}
+
+	public OutboundUDP reply ( byte[] replyData ) throws Exception {
+		return new OutboundUDP (
+			remoteAddress(),
+			remotePort(),
+			replyData,
+			server,
+			packetId
+		);
 	}
 	
 	// network info
@@ -42,19 +57,19 @@ public class ReceiveUDP extends Thread implements Connection {
 	}
 	
 	// connection identity info
+	public String protocol () {
+		return "UDP";
+	}
+	
+	public boolean inbound () {
+		return true;
+	}
+	
 	public Server server () {
 		return server;
 	}
 	public int connectionId () {
 		return packetId;
-	}
-	
-	public void reply ( String replyData ) throws Exception {
-		reply( replyData.getBytes() );
-	}
-	public void reply ( byte[] replyData ) throws Exception {
-		System.out.println( "Replying to "+remoteAddress()+":"+remotePort()+"..." );
-		server.send( remoteAddress(), remotePort(), replyData );
 	}
 	
 	public byte[] data () {
