@@ -16,11 +16,14 @@ public class RequestHTTP {
 	String firstLine = "";
 	StringMap1D<String> header = new StringMap1D<>();
 
-	// Query data sent with the request (first line of header or body)
-	String data = "";
+	// Query data sent with the request
+	byte[] data;
 
 	// Path requested (first line of header)
 	String path = "";
+
+	// Body as text String
+	String body = "";
 
 
 	public RequestHTTP ( Socket s, int id ) {
@@ -66,7 +69,7 @@ public class RequestHTTP {
 				else if (testUTF.equals("\r\n\r\n") || testASCII.equals("\r\n\r\n")) break;
 			}
 
-			// parse HTTP header (...and now we convert it to a String.)
+			// parse HTTP header (...and now we convert it to a String, allowing Java to guess at its encoding format...)
 			String whole_header = new String( byteBuffer );
 			// split on returns
 			String[] split_header = whole_header.split("\r\n");
@@ -82,24 +85,24 @@ public class RequestHTTP {
 			// System.out.println( "["+sessionId+"] Request: "+firstLine+"\n"+header );
 
 
-			// read HTTP body (read in bytes...)
+			// Read in bytes to Content-Length...
 			if (header.defined("Content-Length")) {
 				// get Content-Length in an int
 				int content_length = Integer.parseInt( header.read("Content-Length") );
-				System.out.println( "["+sessionId+"] Request: Content-Length="+content_length );
+				System.out.println( "["+sessionId+"] RequestHTTP: Content-Length="+content_length );
 				// read Content-Length bytes from the socket
-				byte[] body_bytes = new byte[content_length];
+				data = new byte[content_length];
 				// ...now convert bytes to a String.
-				if (stream.read( body_bytes ) < 1) {
+				if (stream.read( data ) < 1) {
 					// check for zero bytes (0) or end of stream (-1)
-					System.out.println( "["+sessionId+"] Request: body: no data received" );
+					System.out.println( "["+sessionId+"] RequestHTTP: body: no data received" );
 				} else {
-					// convert the body_bytes into the data String
-					data = new String( body_bytes );
-					System.out.println( "["+sessionId+"] Request: body: "+data );
+					// convert the data bytes into text String (allowing Java to guess at the format)
+					body = new String( data );
+					System.out.println( "["+sessionId+"] RequestHTTP: body: "+body );
 				}
 			} else if (type.equals("POST")) {
-				System.out.println( "["+sessionId+"] Request: ERROR: Content-Length not defined" );
+				System.out.println( "["+sessionId+"] RequestHTTP: ERROR: Content-Length not defined" );
 			}
 
 
@@ -112,8 +115,8 @@ public class RequestHTTP {
 					path = firstLine
 						.substring( 4, firstLine.indexOf("?") );
 
-					// read data
-					data = firstLine
+					// read body
+					body = firstLine
 						.substring( firstLine.indexOf("?")+1, firstLine.indexOf(" HTTP/1") );
 
 				} else {
@@ -151,8 +154,12 @@ public class RequestHTTP {
 		return header.map();
 	}
 
-	public String data () {
+	public byte[] data () {
 		return data;
+	}
+
+	public String body () {
+		return body;
 	}
 
 	public String path () {

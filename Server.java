@@ -76,26 +76,22 @@ public abstract class Server extends Thread {
 
 	public void run () {
 
-		while (starting) {
-			try {
-				init();
-				starting = false;
-			} catch (Exception e) {
-				System.out.println(this+": Exception caught during init() in '"+name+"':");
-				System.out.println(e);
-				e.printStackTrace();
-				int delay = (int)(Math.random()*10+1);
-				System.out.println(this+": Will try again in "+delay+"ms...");
-				Thread.sleep(delay); // 1-10 milliseconds
-			}
+		try {
+			init();
+		} catch (Exception e) {
+			System.out.println("Exception caught during init() in paddle.Server '"+name+"':");
+			System.out.println(e);
+			e.printStackTrace();
 		}
-		System.out.println( this+": '"+name+"' is serving on port "+port+"..." );
+		starting = false;
+		System.out.println( "paddle.Server '"+name+"' is running on port "+port+"..." );
 
 		while (running) {
 			try {
 				loop();
-			} catch (Exception e) {
-				System.out.println(this+": Exception caught during loop() in '"+name+"':");
+			}
+			catch (Exception e) {
+				System.out.println("Exception caught during loop() in paddle.Server '"+name+"':");
 				System.out.println(e);
 				e.printStackTrace();
 			}
@@ -108,7 +104,7 @@ public abstract class Server extends Thread {
 				try {
 					Thread.sleep(1);
 				} catch (Exception e) {
-					System.out.println(this+": Exception caught during sleep after pausing '"+name+"':");
+					System.out.println("Exception caught during sleep after pausing paddle.Server '"+name+"':");
 					System.out.println(e);
 					e.printStackTrace();
 				}
@@ -120,7 +116,7 @@ public abstract class Server extends Thread {
 
 		}
 
-		System.out.println( this+": '"+name+"' on port "+port+" has ended." );
+		System.out.println( "paddle.Server '"+name+"' on port "+port+" has ended." );
 
 	}
 

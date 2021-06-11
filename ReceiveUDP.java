@@ -1,55 +1,62 @@
 package paddle;
 
-public class ReceiveUDP extends Thread {
+import java.net.*;
 
-	private Server server;
+public class ReceiveUDP extends Thread implements Connection {
+
+	private ServerUDP server;
+	private DatagramSocket socket;
 	private DatagramPacket packet;
 	private int packetId;
-	private String data;
+	private byte[] data;
+	private String remoteAddress;
+	private int remotePort;
 	
 
-	public ReceiveUDP ( Server server, DatagramSocket packet, int packetId ) {
-		this.packet = packet;
+	public ReceiveUDP ( ServerUDP server, DatagramSocket socket, DatagramPacket packet, int packetId ) {
 		this.server = server;
+		this.socket = socket;
+		this.packet = packet;
 		this.packetId = packetId;
+		
 		start();
 	}
 	
 	public void run () {
-		data = new String( packet.getData() );
-		server.state().respondUDP( this );
+		data = packet.getData();
+		server.state().respond( this );
 	}
 	
 	// network info
 	public String remoteAddress () {
-		packet.getAddress().toString();
+		return packet.getAddress().toString();
 	}
 	public int remotePort () {
-		packet.getPort();
+		return packet.getPort();
 	}
 	public String localAddress () {
-		socket.getLocalAddress().toString();
+		return socket.getLocalAddress().toString();
 	}
 	public int localPort () {
-		socket.getLocalPort();
+		return socket.getPort();
 	}
 	
 	// connection identity info
-	public int packetId () {
-		return packetId;
-	}
 	public Server server () {
 		return server;
 	}
-	
-	public void reply ( String data ) {
-		reply( data.getBytes() );
-	}
-	public void reply ( byte[] data ) {
-		server.send( remoteAddress(), remotePort(), data );
+	public int connectionId () {
+		return packetId;
 	}
 	
-	public String data () {
+	public void reply ( String replyData ) {
+		reply( replyData.getBytes() );
+	}
+	public void reply ( byte[] replyData ) {
+		server.send( remoteAddress(), remotePort(), replyData );
+	}
+	
+	public byte[] data () {
 		return data;
 	}
 		

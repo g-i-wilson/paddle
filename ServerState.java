@@ -8,31 +8,36 @@ package paddle;
 
 public class ServerState {
 
-	private int responses = 0;
+	private int count = 0;
+	
+	public void printConnection ( Connection c ) {
+  	System.out.println(
+  		this+" ["+count+"]:\n"+
+  		"Type: "+c+"\n"+
+  		"Name: "+c.server().name()+" ("+c.connectionId()+")\n"+
+  		"From: "+c.remoteAddress()+":"+c.remotePort()+"\n"+
+  		"To:   "+c.localAddress()+":"+c.localPort()+"\n"+
+  		"Data: '"+c.data()+"'\n"
+  	);
+	}
 
-  public void respondHTTP (RequestHTTP req, ResponseHTTP res) {
-    System.out.println( req );
-    res.setBody(
+  public void respond ( SessionHTTP session ) {
+  	count++;
+    session.response().setBody(
     	"<h1>HTTP works!<h1><br>"+
-    	"response: "+(responses++)+"<br>"+
-    	"server: "req.server().name()+"<br>"+
-    	"port: "req.server().port()+"<br>"+
-    	"sessionId: "+req.sessionId()+"<br>"+
-    	"path: "+req.path()+"<br>"+
-    	"data: "+req.data()
+    	"path: "+session.request().path()+"<br>"+
+    	"body: "+session.request().body()
     );
+    printConnection( session );
   }
   
-  public void respondUDP (ReceiveUDP udp) {
-  	System.out.println(
-  		"UDP Packet\n"+
-  		"response: "+(responses++)+"\n"+
-  		"port: "+udp.localPort()+"\n"+
-  		"packetId: "+udp.packetId()+"\n"+
-  		"data: '"+udp.data()+"'\n"
-  	);
-  	Thread.sleep(500);
-  	udp.reply( "UDP works! Received data("+udp.packetId()+"): "+udp.data() );
+  public void respond ( ReceiveUDP packet ) {
+  	count++;
+    printConnection( packet );
+    try {
+  		Thread.sleep(500);
+  	} catch (Exception e) {}
+  	packet.reply( "UDP works! Received data("+packet.connectionId()+"): "+packet.data() );
   }
-
+  
 }
