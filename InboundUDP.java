@@ -27,7 +27,7 @@ public class InboundUDP extends Thread implements Connection {
 		server.state().respond( this );
 	}
 	
-	// specific to InboundUDP
+	// specific to InboundUDP (returns an OutboundUDP object)
 	public OutboundUDP reply ( String replyText ) throws Exception {
 		return reply ( replyText.getBytes() );
 	}

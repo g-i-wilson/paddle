@@ -12,6 +12,7 @@ public class ServerState {
 	
 	public void printConnection ( Connection c ) {
   	System.out.println(
+  		"\n***\n"+
   		this+" ["+count+"]:\n"+
   		"Protocol:      "+c.protocol()+"\n"+
   		"Direction:     "+(c.inbound() ? "IN" : "OUT")+"\n"+
@@ -19,16 +20,22 @@ public class ServerState {
   		"Connection ID: "+c.connectionId()+"\n"+
   		"Remote Addr:   "+c.remoteAddress()+":"+c.remotePort()+"\n"+
   		"Local Addr:    "+c.localAddress()+":"+c.localPort()+"\n"+
-  		"Data:          "+(c.data() != null ? new String(c.data()) : "")+"\n"
+  		"Data:          "+(c.data() != null ? new String(c.data()) : "")+"\n"+
+  		"***\n"
   	);
+	}
+	
+	public void respond ( OutboundTCP connection ) {
+		count++;
+		printConnection( connection );
 	}
 
   public void respond ( InboundHTTP session ) {
   	count++;
     session.response().setBody(
-    	"<h1>HTTP works!</h1><br>"+
-    	"path: "+session.request().path()+"<br>"+
-    	"body: "+session.request().body()
+    	"<h1>HTTP works!</h1>\n<br>\n"+
+    	"path: "+session.request().path()+"\n<br>\n"+
+    	"body: "+session.request().body()+"\n<br>"
     );
     printConnection( session );
   }

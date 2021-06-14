@@ -5,7 +5,6 @@ public abstract class Server extends Thread {
 	// General
 	private ServerState 		state;
 	private int 						port;
-	private String 					name;
 	private boolean					starting;
 	private boolean					running;
 	private boolean					willPause;
@@ -13,12 +12,12 @@ public abstract class Server extends Thread {
 	
 	
 	public Server ( ServerState state, int port, String name ) {
+		super( name );
 		running				= true;
 		starting			= true;
 		paused				= false;
 		this.state 		= state;
 		this.port 		= port;
-		this.name 		= name;
 		start();
 	}
 	
@@ -31,7 +30,7 @@ public abstract class Server extends Thread {
 	}
 	
 	public String name () {
-		return name;
+		return getName();
 	}
 
 	public boolean starting () {
@@ -66,32 +65,37 @@ public abstract class Server extends Thread {
 	
 	public String toString () {
 		return
-			"Server:    "+name+"\n" +
+			"Server:    "+getName()+"\n" +
 			"port:      "+port+"\n" +
 			"running:   "+running+"\n" +
 			"starting:  "+starting+"\n" +
 			"paused:    "+paused+"\n"
 		;
 	}
+	
+	public void postInit () {
+		System.out.println("Server '"+getName()+"' is listening on port "+port+"...");
+	}
 
 	public void run () {
 
 		try {
 			init();
+			starting = false;
+			postInit();
 		} catch (Exception e) {
-			System.out.println("Exception caught during init() in paddle.Server '"+name+"':");
+			System.out.println("Server '"+getName()+"': Exception caught during init():");
 			System.out.println(e);
 			e.printStackTrace();
+			end();
 		}
-		starting = false;
-		System.out.println( "paddle.Server '"+name+"' is running on port "+port+"..." );
 
 		while (running) {
 			try {
 				loop();
 			}
 			catch (Exception e) {
-				System.out.println("Exception caught during loop() in paddle.Server '"+name+"':");
+				System.out.println("Server '"+getName()+"': Exception caught during loop():");
 				System.out.println(e);
 				e.printStackTrace();
 			}
@@ -104,7 +108,7 @@ public abstract class Server extends Thread {
 				try {
 					Thread.sleep(1);
 				} catch (Exception e) {
-					System.out.println("Exception caught during sleep after pausing paddle.Server '"+name+"':");
+					System.out.println("Server '"+getName()+"': Exception caught during pause:");
 					System.out.println(e);
 					e.printStackTrace();
 				}
@@ -116,7 +120,7 @@ public abstract class Server extends Thread {
 
 		}
 
-		System.out.println( "paddle.Server '"+name+"' on port "+port+" has ended." );
+		System.out.println( "Server '"+getName()+"' on port "+port+" has ended." );
 
 	}
 
