@@ -15,30 +15,9 @@ public class OutboundTCP extends Server implements Connection {
 	private int outboundMemoryValid;
 	private byte[] inboundMemory;
 	private int inboundMemoryPlace;
-	private int chunks;
 
-	// Annonymously send String immediately (simple)
-	public OutboundTCP ( String address, int port, String outboundText ) {
-		this( new ServerState(), address, port, "OutboundTCP", outboundText.getBytes(), new byte[1024], -1, true);
-	}
 
-	// Send String immediately (simple)
-	public OutboundTCP ( ServerState state, String address, int port, String outboundText ) {
-		this( state, address, port, "OutboundTCP", outboundText.getBytes(), new byte[1024], -1, true );
-	}
-
-	// Send String immediately
-	public OutboundTCP ( ServerState state, String address, int port, String name, String outboundText, int inboundLength, int connectionId ) {
-		this( state, address, port, name, outboundText.getBytes(), new byte[inboundLength], connectionId, true );
-	}
-
-	// Send bytes incrementally
 	public OutboundTCP ( ServerState state, String address, int port, String name, byte[] outboundMemory, byte[] inboundMemory, int connectionId ) {
-		this( state, address, port, name, outboundMemory, inboundMemory, connectionId, false );
-	}
-
-	// All-argument constructor
-	public OutboundTCP ( ServerState state, String address, int port, String name, byte[] outboundMemory, byte[] inboundMemory, int connectionId, boolean allValid ) {
 		super( state, port, name );
 		this.connectionId = connectionId;
 		this.address = address;
@@ -46,8 +25,6 @@ public class OutboundTCP extends Server implements Connection {
 		inboundMemoryPlace = 0;
 		this.outboundMemory = outboundMemory;
 		outboundMemoryPlace = 0;
-		outboundMemoryValid = ( allValid ? outboundMemory.length : 0 );
-		chunks = 0;
 	}
 	
 	public void init () throws Exception {
@@ -78,8 +55,6 @@ public class OutboundTCP extends Server implements Connection {
 		}
 		output.flush();
 		
-		sleep(1);
-		
 		// catch up on reading if there's data in the stream...
 		int nextByte = input.read();
 		if ( nextByte != -1 ) {
@@ -92,8 +67,9 @@ public class OutboundTCP extends Server implements Connection {
 				nextByte = input.read();
 			}
 			this.state().respond( this );
-			chunks++;
 		}
+		
+		sleep(100);
 	}
 	
 	// specific to OutboundTCP
@@ -114,7 +90,6 @@ public class OutboundTCP extends Server implements Connection {
 		return inboundMemoryPlace;
 	}
 	
-	@Override
 	public void end () {
 		try {
 			socket.close();
@@ -122,31 +97,6 @@ public class OutboundTCP extends Server implements Connection {
 		} catch (Exception e) {
 			e.printStackTrace();	
 		}
-	}
-	
-	public OutboundTCP receive () {
-		return receive(1);
-	}
-	
-	public OutboundTCP receive ( int chunksToReceive ) {
-		while (chunks < chunksToReceive) {
-			try {
-				Thread.sleep (1);
-			} catch (Exception e) {
-				e.printStackTrace();
-				break;
-			}
-		}
-		end();
-		return this;
-	}
-	
-	public int chunks () {
-		return chunks;
-	}
-	
-	public String text () {
-		return new String( data() );
 	}
 	
 	
@@ -198,36 +148,15 @@ public class OutboundTCP extends Server implements Connection {
 			state,
 			"localhost",
 			9000,
-			"tcp0",
+			"tcp-outbound",
 			"GET /?some_data HTTP/1.1\r\n\r\n".getBytes(),
-			new byte[300],
+			new byte[1000],
 			100
 		);
 
 		while(http0.starting()) Thread.sleep(1);
 		
-		tcp0.outboundMemoryValid(300);
-		
-		Thread.sleep(1000);
-		
-		System.out.println(
-			"Text received: "+
-			(new OutboundTCP( "localhost", 9000, "GET /easy HTTP/1.1\r\n\r\n" ))
-			.receive()
-			.text()
-		);
-		
-		Thread.sleep(1000);
-		
-		tcp0.end();
-		
-		System.out.println(
-			"Text received: "+
-			(new OutboundTCP( "10.0.1.20", 18000, "test data" ))
-			.receive()
-			.text()
-		);
-		
+		tcp0.outboundMemoryValid(999);
 	}
-	
+
 }
