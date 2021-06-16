@@ -40,6 +40,16 @@ public abstract class Server extends Thread {
 	/////////////// ABSTRACT METHOD ///////////////
 	public abstract void init() throws Exception;
 
+	public void initSuccess () {
+		System.out.println( this.getClass().getName()+" '"+getName()+"' is listening on port "+port+"..." );
+	}
+
+	public void initException ( Exception e ) {
+		System.out.println( this.getClass().getName()+" '"+getName()+"': Exception during init():" );
+		e.printStackTrace();
+		end();
+	}
+
 	public boolean running () {
 		return running;
 	}
@@ -47,6 +57,20 @@ public abstract class Server extends Thread {
 	/////////////// ABSTRACT METHOD ///////////////
 	public abstract void loop () throws Exception;
 	
+	public void loopException ( Exception e ) {
+		System.out.println( this.getClass().getName()+" '"+getName()+"': Exception during loop():" );
+		e.printStackTrace();
+		try {
+			sleep(500);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+	}
+	
+	public void loopEnded () {
+		System.out.println( this.getClass().getName()+" '"+getName()+"' on port "+port+" has ended." );
+	}
+
 	public void pause () {
 		willPause = true;
 	}
@@ -73,21 +97,14 @@ public abstract class Server extends Thread {
 		;
 	}
 	
-	public void postInit () {
-		System.out.println("Server '"+getName()+"' is listening on port "+port+"...");
-	}
-
 	public void run () {
 
 		try {
 			init();
 			starting = false;
-			postInit();
+			initSuccess();
 		} catch (Exception e) {
-			System.out.println("Server '"+getName()+"': Exception caught during init():");
-			System.out.println(e);
-			e.printStackTrace();
-			end();
+			initException( e );
 		}
 
 		while (running) {
@@ -95,9 +112,7 @@ public abstract class Server extends Thread {
 				loop();
 			}
 			catch (Exception e) {
-				System.out.println("Server '"+getName()+"': Exception caught during loop():");
-				System.out.println(e);
-				e.printStackTrace();
+				loopException( e );
 			}
 		
 			if (willPause) {
@@ -106,10 +121,8 @@ public abstract class Server extends Thread {
 			}
 			while (paused) {
 				try {
-					Thread.sleep(1);
+					sleep(1);
 				} catch (Exception e) {
-					System.out.println("Server '"+getName()+"': Exception caught during pause:");
-					System.out.println(e);
 					e.printStackTrace();
 				}
 				if (!running) {
@@ -119,9 +132,9 @@ public abstract class Server extends Thread {
 			}
 
 		}
-
-		System.out.println( "Server '"+getName()+"' on port "+port+" has ended." );
+		
+		loopEnded();
 
 	}
-
+	
 }

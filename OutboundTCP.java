@@ -63,10 +63,15 @@ public class OutboundTCP extends Server implements Connection {
 		output = socket.getOutputStream();
 	}
 	
-	public void postInit () {
-		System.out.println("OutboundTCP '"+getName()+"' is connected to "+address+":"+port()+"...");
+	public void initSuccess () {
+		System.out.println( this.getClass().getName()+" '"+getName()+"' is connected to "+address+":"+port()+"..." );
 	}
-
+	
+	public void initException ( Exception e ) {
+		System.out.println( this.getClass().getName()+" '"+getName()+"': Exception while connecting to "+address+":"+port()+"\n"+e );
+		end();
+	}
+	
 	public void loop () throws Exception {
 		// catch up on writing if outboundMemory has increased...
 		while (
@@ -96,6 +101,13 @@ public class OutboundTCP extends Server implements Connection {
 		}
 	}
 	
+	public void loopEnded () {
+		try {
+			socket.close();
+		} catch (Exception e) {}
+		System.out.println( this.getClass().getName()+" '"+getName()+"' has disconnected from "+address+":"+port()+"." );
+	}
+	
 	// specific to OutboundTCP
 	public byte[] outboundMemory () {
 		return outboundMemory;
@@ -112,16 +124,6 @@ public class OutboundTCP extends Server implements Connection {
 	
 	public int inboundMemoryPlace () {
 		return inboundMemoryPlace;
-	}
-	
-	@Override
-	public void end () {
-		try {
-			socket.close();
-			super.end();
-		} catch (Exception e) {
-			e.printStackTrace();	
-		}
 	}
 	
 	public OutboundTCP receive () {
