@@ -38,6 +38,11 @@ public class OutboundTCP extends Server implements Connection {
 		this( state, address, port, name, outboundMemory, inboundMemory, connectionId, false );
 	}
 
+	// Send bytes immediately (simple)
+	public OutboundTCP ( ServerState state, String address, int port, byte[] outboundBytes ) {
+		this( state, address, port, "OutboundTCP", outboundBytes, new byte[outboundBytes.length], -1, true );
+	}
+	
 	// All-argument constructor
 	public OutboundTCP ( ServerState state, String address, int port, String name, byte[] outboundMemory, byte[] inboundMemory, int connectionId, boolean allValid ) {
 		super( state, port, name );
