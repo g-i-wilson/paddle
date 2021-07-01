@@ -118,6 +118,9 @@ public class RequestHTTP {
 					// read body
 					body = firstLine
 						.substring( firstLine.indexOf("?")+1, firstLine.indexOf(" HTTP/1") );
+						
+					// reference byte[] array
+					data = body.getBytes();
 
 				} else {
 
@@ -175,7 +178,7 @@ public class RequestHTTP {
 	}
 
 	public String toString () {
-		return firstLine + "\n" + header.toString() + "\n" + data();
+		return firstLine + "\n" + header.toString() + "\n" + body();
 	}
 
 }
