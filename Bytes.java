@@ -1,3 +1,5 @@
+package paddle;
+
 import java.util.*;
 
 public class Bytes {
@@ -110,7 +112,7 @@ public class Bytes {
 	// big endian methods
 	
 	public Bytes writeLongBE ( long val, int start, int length ) {
-		for (int i=Math.min(start+length,bytes.length-1); i>=start; i--) {
+		for (int i=Math.min(start+length,bytes.length)-1; i>=start; i--) {
 			bytes[i] = (byte)( val & 0xff );
 			val = val >> 8;
 		}
@@ -188,6 +190,8 @@ public class Bytes {
 	// test Bytes
 	
 	public static void main (String[] args) {
+		System.out.println( "Little Endian:" );
+	
 		Bytes b0 = new Bytes( "fe_ff | 00_01 | fe.FF.fF.Ff | 01,00,00,00" );
 		
 		short b0s0 = b0.readShortLE( 0, 2 );
@@ -233,6 +237,40 @@ public class Bytes {
 			.writeShortLE( (short)0xEEFF, 4, 2 )
 			.writeShortLE( (short)0xEEFF, 5, 2 )
 			.writeShortLE( (short)0xEEFF, 6, 2 )
+		;
+		System.out.println( b0 );
+
+		System.out.println( "Big Endian:" );
+	
+		System.out.println("writing int 0x01020304 at 4: " );
+		b0.writeIntBE( 0x01020304, 4, 4 );
+		System.out.println( b0.readIntBE(4, 4) );
+		System.out.println( b0 );
+		
+		System.out.println( "writing long -1 at 3: ");
+		b0.writeLongBE( -1, 3, 8 );
+		System.out.println( b0.readLongBE(4, 8) );
+		System.out.println( b0 );
+		
+		System.out.println( "writing short 496 (0x01F0) at 1: ");
+		b0.writeShortBE( (short)496, 1, 2 );
+		System.out.println( b0.readShortBE(1, 2) );
+		System.out.println( b0 );
+		
+		System.out.println( "writing short 0x0102 at 10: ");
+		b0.writeShortBE( (short)0x8001, 10, 2 );
+		System.out.println( b0.readShortBE(10, 2) );
+		System.out.println( b0 );
+		
+		s = b0.readShortBE( 0, 2 );
+		System.out.println( "short at 0: "+s );
+		System.out.println( b0 );
+		
+		b0
+			.writeShortBE( (short)0xEEFF, 3, 2 )
+			.writeShortBE( (short)0xEEFF, 4, 2 )
+			.writeShortBE( (short)0xEEFF, 5, 2 )
+			.writeShortBE( (short)0xEEFF, 6, 2 )
 		;
 		System.out.println( b0 );
 
