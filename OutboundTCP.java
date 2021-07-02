@@ -8,7 +8,7 @@ public class OutboundTCP extends Server implements Connection {
 	private Socket socket;
 	private int connectionId;
 	private String address;
-	private BufferedReader input;
+	private BufferedInputStream input;
 	private OutputStream output;
 	private byte[] outboundMemory;
 	private int outboundMemoryPlace;
@@ -16,6 +16,7 @@ public class OutboundTCP extends Server implements Connection {
 	private byte[] inboundMemory;
 	private int inboundMemoryPlace;
 	private int chunks;
+	private int timeout;
 
 	// Annonymously send String immediately (simple)
 	public OutboundTCP ( String address, int port, String outboundText ) {
@@ -37,6 +38,11 @@ public class OutboundTCP extends Server implements Connection {
 		this( state, address, port, name, outboundMemory, inboundMemory, connectionId, false );
 	}
 
+	// Send bytes immediately (simple)
+	public OutboundTCP ( ServerState state, String address, int port, byte[] outboundBytes ) {
+		this( state, address, port, "OutboundTCP", outboundBytes, new byte[outboundBytes.length], -1, true );
+	}
+	
 	// All-argument constructor
 	public OutboundTCP ( ServerState state, String address, int port, String name, byte[] outboundMemory, byte[] inboundMemory, int connectionId, boolean allValid ) {
 		super( state, port, name );
@@ -48,18 +54,20 @@ public class OutboundTCP extends Server implements Connection {
 		outboundMemoryPlace = 0;
 		outboundMemoryValid = ( allValid ? outboundMemory.length : 0 );
 		chunks = 0;
+		timeout = 10000; // 10 seconds
 	}
 	
 	public void init () throws Exception {
 		socket = new Socket ( address, this.port() );
 		
-		input =
-			new BufferedReader (
-				new InputStreamReader (
-					socket.getInputStream()
-				)
-			);
-			
+//		input =
+//			new BufferedReader (
+//				new InputStreamReader (
+//					socket.getInputStream()
+//				)
+//			);
+
+		input = new BufferedInputStream( socket.getInputStream() );			
 		output = socket.getOutputStream();
 	}
 	
@@ -90,14 +98,16 @@ public class OutboundTCP extends Server implements Connection {
 		if ( nextByte != -1 ) {
 			while (
 				inboundMemory.length > inboundMemoryPlace &&
+				input.available() > 0 &&
 				nextByte != -1
 			) {
 				inboundMemory[inboundMemoryPlace] = (byte)(nextByte & 0xff);
 				inboundMemoryPlace++;
 				nextByte = input.read();
+				sleep(1);
 			}
-			this.state().respond( this );
 			chunks++;
+			this.state().respond( this );
 		}
 	}
 	
@@ -130,8 +140,17 @@ public class OutboundTCP extends Server implements Connection {
 		return receive(1);
 	}
 	
+	public OutboundTCP timeout ( int timeout ) {
+		this.timeout = timeout;
+		return this;
+	}
+	
 	public OutboundTCP receive ( int chunksToReceive ) {
-		while (chunks < chunksToReceive) {
+		long timeoutStart = System.currentTimeMillis();
+		while (
+			chunks < chunksToReceive &&
+			(int)(System.currentTimeMillis() - timeoutStart) < timeout
+		) {
 			try {
 				Thread.sleep (1);
 			} catch (Exception e) {
@@ -149,6 +168,10 @@ public class OutboundTCP extends Server implements Connection {
 	
 	public String text () {
 		return new String( data() );
+	}
+	
+	public String hex () {
+		return ( new Bytes(data()) ).toString();
 	}
 	
 	
