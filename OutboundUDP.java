@@ -18,6 +18,11 @@ public class OutboundUDP implements Connection {
 	}
 
 	// independent of a Server (send byte array)
+	public OutboundUDP ( String address, int port, byte[] data ) throws Exception {
+		this( address, port, data, new DatagramSocket(), -1 );
+	}
+
+	// independent of a Server; with packetId (send byte array)
 	public OutboundUDP ( String address, int port, byte[] data, int packetId ) throws Exception {
 		this( address, port, data, new DatagramSocket(), packetId );
 	}
@@ -27,7 +32,7 @@ public class OutboundUDP implements Connection {
 		this( address, port, text.getBytes(), server, -1 );
 	}
 
-	// via a Server (send byte array)
+	// via a Server; with packetId (send byte array)
 	public OutboundUDP ( String address, int port, byte[] data, ServerUDP server, int packetId ) throws Exception {
 		while (server.starting()) { // wait if the server is still starting up...
 			Thread.sleep(1);
@@ -38,7 +43,7 @@ public class OutboundUDP implements Connection {
 		this.address = address;
 		this.port = port;
 		this.data = data;
-		this.packetId = packetId;		
+		this.packetId = packetId;
 		send();
 	}
 
@@ -48,15 +53,15 @@ public class OutboundUDP implements Connection {
 		this.address = address;
 		this.port = port;
 		this.data = data;
-		this.packetId = packetId;	
+		this.packetId = packetId;
 		send();
 	}
-	
+
 	public OutboundUDP send ( byte[] newData ) throws Exception {
 		data = newData;
 		return send();
 	}
-	
+
 	public OutboundUDP send () throws Exception {
 		packet = new DatagramPacket(
 			data,
@@ -67,7 +72,7 @@ public class OutboundUDP implements Connection {
 		socket.send( packet );
 		return this;
 	}
-	
+
 	// network info
 	public String remoteAddress () {
 		return packet.getAddress().toString().substring(1);
@@ -81,23 +86,23 @@ public class OutboundUDP implements Connection {
 	public int localPort () {
 		return socket.getPort();
 	}
-	
+
 	// connection identity info
 	public String protocol () {
 		return "UDP";
 	}
-	
+
 	public boolean inbound () {
 		return false;
 	}
-	
+
 	public Server server () {
 		return server;
 	}
 	public int connectionId () {
 		return packetId;
 	}
-	
+
 	public byte[] data () {
 		return data;
 	}

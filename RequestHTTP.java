@@ -132,9 +132,9 @@ public class RequestHTTP {
 			// POST request
 			} else if (type.equals("POST")) {
 
-				// read path
+				// read path (lowercase)
 				path = firstLine
-					.substring( 5, firstLine.indexOf(" HTTP/1") );
+					.substring( 5, firstLine.indexOf(" HTTP/1") ).toLowerCase(Locale.US);
 
 			} else {
 

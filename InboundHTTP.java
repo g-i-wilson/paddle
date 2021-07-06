@@ -52,6 +52,13 @@ public class InboundHTTP extends Thread implements Connection {
 	}
 	
 	// specific to InboundHTTP
+	public boolean path ( String comparePath ) {
+		// NOTE: comparePath should be lower-case,
+		//       since request().path() converts to lower-case.
+		//       Also, HTTP paths must start with '/'.
+		return request().path().startsWith( comparePath );
+	}
+	
 	public RequestHTTP request () {
 		return request;
 	}
